@@ -35,7 +35,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
     private final String hideCameraAction = "hideCamera";
 
     private final String getSupportedPreviewSizesAction = "getSupportedPreviewSizes";
-    private final String getSupportedPictureSizesAction = "getSupportedPictureSizes";    
+    private final String getSupportedPictureSizesAction = "getSupportedPictureSizes";
 
 
     private final String [] permissions = {
@@ -45,14 +45,14 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
     };
 
     private final int permissionsReqId = 0;
-    
+
     private CameraActivity fragment;
     private CallbackContext takePictureCallbackContext;
     private CallbackContext wLogCallbackContext;
 
     private CallbackContext execCallback;
     private JSONArray execArgs;
-    
+
     private int containerViewId = 1;
     public CameraPreview() {
 
@@ -89,7 +89,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
             return getSupportedResolutions("previews", callbackContext);
         } else if (getSupportedPictureSizesAction.equals(action)) {
             return getSupportedResolutions("pictures", callbackContext);
-        }        
+        }
 
         return false;
     }
@@ -108,9 +108,9 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
             startCamera(execArgs, execCallback);
         }
     }
-    
+
     private boolean getSupportedResolutions(final String type, CallbackContext callbackContext) {
-    
+
     List<Camera.Size> supportedSizes;
     Camera camera = fragment.getCamera();
 
@@ -141,7 +141,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
     callbackContext.error("Camera needs to be started first");
     return false;
 
-    }    
+    }
 
     private boolean startCamera(final JSONArray args, CallbackContext callbackContext) {
         Log.d(TAG, "start camera action");
@@ -150,7 +150,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
             return false;
         }
 
-        
+
         fragment = new CameraActivity();
         fragment.setEventListener(this);
         final CallbackContext cb = callbackContext;
@@ -212,13 +212,15 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
 //                    fragment.switchCamera();
 //                    Log.d("CameraPreview", "after switch");
 
+                    setAutoFocus();                    
                     cb.success("Camera started");
+
                 } catch (Exception e) {
                     e.printStackTrace();
-                    cb.error("Camera start error");                    
+                    cb.error("Camera start error");
 
                 }
-                
+
             }
         });
 //        fragment.printPreviewSize("previewStartCamera");
@@ -264,6 +266,32 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
         pluginResult.setKeepCallback(true);
         takePictureCallbackContext.sendPluginResult(pluginResult);
     }*/
+
+    private boolean setAutoFocus() {
+        if (fragment == null) {
+            return false;
+        }
+
+        Camera camera = fragment.getCamera();
+        if (camera == null) {
+            return true;
+        }
+
+
+        Camera.Parameters params = camera.getParameters();
+        if (params.getSupportedFocusModes().contains(
+            Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+          params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        }
+        try {
+          fragment.setCameraParameters(params);
+          return true;
+        }
+        catch (Exception e) {
+          e.printStackTrace();
+          return false;
+        }
+    }
 
     private boolean setColorEffect(final JSONArray args, CallbackContext callbackContext) {
         if (fragment == null) {
@@ -355,6 +383,7 @@ public class CameraPreview extends CordovaPlugin implements CameraActivity.Camer
             return false;
         }
         fragment.switchCamera();
+        setAutoFocus();
         callbackContext.success("Switched camera successfully");
         return true;
     }
